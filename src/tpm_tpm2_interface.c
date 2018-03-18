@@ -93,6 +93,7 @@ TPM_BOOL _TPM2_CheckNVRAMFileExists(void)
 TPM_RESULT TPM2_MainInit(void)
 {
     TPM_RESULT ret = TPM_SUCCESS;
+    bool has_cached_state;
 
     g_inFailureMode = FALSE;
 
@@ -119,6 +120,8 @@ TPM_RESULT TPM2_MainInit(void)
         TPM_Manufacture(TRUE);
     }
 
+    has_cached_state = HasCachedState(TPMLIB_STATE_PERMANENT);
+
     _rpc__Signal_PowerOn(FALSE);
 
     _rpc__Signal_NvOn();
@@ -126,6 +129,10 @@ TPM_RESULT TPM2_MainInit(void)
     if (ret == TPM_SUCCESS) {
         if (g_inFailureMode)
             ret = TPM_RC_FAILURE;
+    }
+
+    if (ret == TPM_SUCCESS && has_cached_state) {
+        NvCommit();
     }
 
     return ret;
